@@ -97,7 +97,7 @@
       const reopen = document.createElement('button');
       reopen.id = 'geofs-underwater-probe-reopen';
       reopen.textContent = 'Underwater Probe';
-      reopen.style.cssText = 'position:fixed;right:12px;bottom:12px;z-index:2147483647;padding:8px 10px;background:#0e141d;color:#fff;border:1px solid #8793a5;border-radius:8px;';
+      reopen.style.cssText = 'position:fixed;right:1px;bottom:12px;z-index:2147483647;padding:8px 10px;background:#0e141d;color:#fff;border:1px solid #8793a5;border-radius:8px;';
       reopen.addEventListener('click', () => { panel.style.display = 'block'; reopen.remove(); });
       document.body.appendChild(reopen);
     });
