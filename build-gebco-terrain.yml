@@ -1,0 +1,53 @@
+name: Build GEBCO Cesium Terrain
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'gebco_2026_n34.89_s34.08_w134.5_e135.6_geotiff.tif'
+      - '.github/workflows/build-gebco-terrain.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: gebco-terrain-build
+  cancel-in-progress: false
+
+jobs:
+  build-terrain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Verify source GeoTIFF
+        run: test -s "gebco_2026_n34.89_s34.08_w134.5_e135.6_geotiff.tif"
+
+      - name: Prepare GeoTIFF for Cesium
+        run: docker run --rm -v "$GITHUB_WORKSPACE:/data" geodan/terrainwarp:latest -j 2
+
+      - name: Create Quantized Mesh terrain tiles
+        run: docker run --rm -v "$GITHUB_WORKSPACE:/data" geodan/terraintiler:latest -s 12 -b 9 -e 0 -j 2
+
+      - name: Verify generated tiles
+        shell: bash
+        run: |
+          test -s tiles/layer.json
+          count=$(find tiles -type f -name '*.terrain' | wc -l)
+          echo "Generated terrain tiles: $count"
+          test "$count" -gt 0
+          echo "Generated layer.json:"
+          cat tiles/layer.json
+
+      - name: Publish terrain tiles to gh-pages branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ./tiles
+          force_orphan: true
+          enable_jekyll: false
